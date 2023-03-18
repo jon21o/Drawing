@@ -130,52 +130,34 @@ class My_Rectangle(My_Shape):
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},
         )
+
+        # start with ref_pt = "bot_left" and translate to different ref_pts below
+        self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
+        self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
+        self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x
+        self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
+        self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + width
+        self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
+        self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + width
+        self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+
         # region #### reference site definitions
         if ref_pt == "center":
-            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x - (width / 2)
-            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y - (height / 2)
-            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x - (width / 2)
-            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + (height / 2)
-            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + (width / 2)
-            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + (height / 2)
-            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + (width / 2)
-            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y - (height / 2)
-        elif ref_pt == "bot_left":
-            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
-            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + width
-            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
-            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + width
-            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+            self.translate(-width / 2, -height / 2)
+        elif ref_pt == "mid_left":
+            self.translate(0, -height / 2)
         elif ref_pt == "top_left":
-            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y - height
-            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + width
-            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + width
-            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y - height
+            self.translate(0, -height)
+        elif ref_pt == "mid_top":
+            self.translate(-width / 2, -height)
         elif ref_pt == "top_right":
-            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x - width
-            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y - height
-            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x - width
-            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y - height
+            self.translate(-width, -height)
+        elif ref_pt == "mid_right":
+            self.translate(-width, -height / 2)
         elif ref_pt == "bot_right":
-            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x - width
-            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
-            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x - width
-            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
-            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
-            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x
-            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+            self.translate(-width, 0)
+        elif ref_pt == "mid_bot":
+            self.translate(-width / 2, 0)
         # endregion
 
     def move_xy(self, ref_pt, ref_pt_x, ref_pt_y):
