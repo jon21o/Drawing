@@ -54,7 +54,16 @@ class My_Shape:
 
     def scale(self, sx, sy):
         self._matrix = xr.DataArray(
-            scale_matrix(sx, sy) @ self._matrix.values,
+            translation_matrix(
+                self.centroid.loc[dict(dim="x")].values,
+                self.centroid.loc[dict(dim="y")].values,
+            )
+            @ scale_matrix(sx, sy)
+            @ translation_matrix(
+                -self.centroid.loc[dict(dim="x")].values,
+                -self.centroid.loc[dict(dim="y")].values,
+            )
+            @ self._matrix.values,
             dims=["dim", "pt"],
             coords={
                 "dim": ["x", "y", "z"],
@@ -66,7 +75,16 @@ class My_Shape:
 
     def rotate(self, r):
         self._matrix = xr.DataArray(
-            rotation_matrix(r) @ self._matrix.values,
+            translation_matrix(
+                self.centroid.loc[dict(dim="x")].values,
+                self.centroid.loc[dict(dim="y")].values,
+            )
+            @ rotation_matrix(r)
+            @ translation_matrix(
+                -self.centroid.loc[dict(dim="x")].values,
+                -self.centroid.loc[dict(dim="y")].values,
+            )
+            @ self._matrix.values,
             dims=["dim", "pt"],
             coords={
                 "dim": ["x", "y", "z"],
@@ -76,6 +94,129 @@ class My_Shape:
             },
         )
         self._rotation += r
+
+    def move_bbox_xy_to(self, ref_pt, ref_pt_x, ref_pt_y):
+        if ref_pt == "center":
+            self.translate(
+                ref_pt_x - self.centroid.loc[dict(dim="x")],
+                ref_pt_y - self.centroid.loc[dict(dim="y")],
+            )
+        if ref_pt == "bot_left":
+            self.translate(
+                ref_pt_x - self.bbox_bot_left.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_bot_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_left":
+            self.translate(
+                ref_pt_x - self.bbox_mid_left.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_mid_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "top_left":
+            self.translate(
+                ref_pt_x - self.bbox_top_left.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_top_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_top":
+            self.translate(
+                ref_pt_x - self.bbox_mid_top.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_mid_top.loc[dict(dim="y")],
+            )
+        if ref_pt == "top_right":
+            self.translate(
+                ref_pt_x - self.bbox_top_right.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_top_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_right":
+            self.translate(
+                ref_pt_x - self.bbox_mid_right.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_mid_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "bot_right":
+            self.translate(
+                ref_pt_x - self.bbox_bot_right.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_bot_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_bot":
+            self.translate(
+                ref_pt_x - self.bbox_mid_bot.loc[dict(dim="x")],
+                ref_pt_y - self.bbox_mid_bot.loc[dict(dim="y")],
+            )
+
+    def move_bbox_x_to(self, ref_pt, ref_pt_x):
+        if ref_pt == "center":
+            self.translate(
+                ref_pt_x - self.centroid.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "bot_left":
+            self.translate(
+                ref_pt_x - self.bbox_bot_left.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "mid_left":
+            self.translate(
+                ref_pt_x - self.bbox_mid_left.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "top_left":
+            self.translate(
+                ref_pt_x - self.bbox_top_left.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "mid_top":
+            self.translate(
+                ref_pt_x - self.bbox_mid_top.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "top_right":
+            self.translate(
+                ref_pt_x - self.bbox_top_right.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "mid_right":
+            self.translate(
+                ref_pt_x - self.bbox_mid_right.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "bot_right":
+            self.translate(
+                ref_pt_x - self.bbox_bot_right.loc[dict(dim="x")], 0,
+            )
+        if ref_pt == "mid_bot":
+            self.translate(
+                ref_pt_x - self.bbox_mid_bot.loc[dict(dim="x")], 0,
+            )
+
+    def move_bbox_y_to(self, ref_pt, ref_pt_y):
+        if ref_pt == "center":
+            self.translate(
+                0, ref_pt_y - self.centroid.loc[dict(dim="y")],
+            )
+        if ref_pt == "bot_left":
+            self.translate(
+                0, ref_pt_y - self.bbox_bot_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_left":
+            self.translate(
+                0, ref_pt_y - self.bbox_mid_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "top_left":
+            self.translate(
+                0, ref_pt_y - self.bbox_top_left.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_top":
+            self.translate(
+                0, ref_pt_y - self.bbox_mid_top.loc[dict(dim="y")],
+            )
+        if ref_pt == "top_right":
+            self.translate(
+                0, ref_pt_y - self.bbox_top_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_right":
+            self.translate(
+                0, ref_pt_y - self.bbox_mid_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "bot_right":
+            self.translate(
+                0, ref_pt_y - self.bbox_bot_right.loc[dict(dim="y")],
+            )
+        if ref_pt == "mid_bot":
+            self.translate(
+                0, ref_pt_y - self.bbox_mid_bot.loc[dict(dim="y")],
+            )
 
     def draw_stroke(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
@@ -113,6 +254,119 @@ class My_Shape:
     @property
     def centroid(self):
         return self._matrix.mean(dim="pt")
+
+    @property
+    def bbox_bot_left(self):
+        return self._matrix.min(dim="pt")
+
+    @property
+    def bbox_mid_left(self):
+        temp_array = np.array(
+            [
+                self._matrix.min(dim="pt").loc[dict(dim="x")],
+                (
+                    (
+                        self._matrix.max(dim="pt").loc[dict(dim="y")]
+                        - self._matrix.min(dim="pt").loc[dict(dim="y")]
+                    )
+                    / 2
+                )
+                + self._matrix.min(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_top_left(self):
+        temp_array = np.array(
+            [
+                self._matrix.min(dim="pt").loc[dict(dim="x")],
+                self._matrix.max(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_mid_top(self):
+        temp_array = np.array(
+            [
+                (
+                    (
+                        self._matrix.max(dim="pt").loc[dict(dim="x")]
+                        - self._matrix.min(dim="pt").loc[dict(dim="x")]
+                    )
+                    / 2
+                )
+                + self._matrix.min(dim="pt").loc[dict(dim="x")],
+                self._matrix.max(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_top_right(self):
+        return self._matrix.max(dim="pt")
+
+    @property
+    def bbox_mid_right(self):
+        temp_array = np.array(
+            [
+                self._matrix.max(dim="pt").loc[dict(dim="x")],
+                (
+                    (
+                        self._matrix.max(dim="pt").loc[dict(dim="y")]
+                        - self._matrix.min(dim="pt").loc[dict(dim="y")]
+                    )
+                    / 2
+                )
+                + self._matrix.min(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_bot_right(self):
+        temp_array = np.array(
+            [
+                self._matrix.max(dim="pt").loc[dict(dim="x")],
+                self._matrix.min(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_mid_bot(self):
+        temp_array = np.array(
+            [
+                (
+                    (
+                        self._matrix.max(dim="pt").loc[dict(dim="x")]
+                        - self._matrix.min(dim="pt").loc[dict(dim="x")]
+                    )
+                    / 2
+                )
+                + self._matrix.min(dim="pt").loc[dict(dim="x")],
+                self._matrix.min(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+
+    @property
+    def bbox_bot_right(self):
+        temp_array = np.array(
+            [
+                self._matrix.max(dim="pt").loc[dict(dim="x")],
+                self._matrix.min(dim="pt").loc[dict(dim="y")],
+                1,
+            ]
+        )
+        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
 
     # endregion
 
@@ -160,64 +414,50 @@ class My_Rectangle(My_Shape):
             self.translate(-width / 2, 0)
         # endregion
 
-    def move_xy(self, ref_pt, ref_pt_x, ref_pt_y):
-        # region #### reference site definitions
-        if ref_pt == "center":
-            self.translate(
-                ref_pt_x - self.centroid.loc[dict(dim="x")],
-                ref_pt_y - self.centroid.loc[dict(dim="y")],
-            )
-
-        # endregion
-
     # region #### points on the rectangle
     @property
-    def bot_left(self):
+    def pt1(self):
         return self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
 
     @property
-    def mid_left(self):
+    def mid_pt1_2(self):
         return (
             self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
             - self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
         ) / 2
 
     @property
-    def top_left(self):
+    def pt2(self):
         return self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
 
     @property
-    def mid_top(self):
+    def mid_pt2_3(self):
         return (
             self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
             - self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
         ) / 2
 
     @property
-    def top_right(self):
+    def pt3(self):
         return self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
 
     @property
-    def mid_right(self):
+    def mid_pt3_4(self):
         return (
             self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
             - self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
         ) / 2
 
     @property
-    def bot_right(self):
+    def pt4(self):
         return self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
 
     @property
-    def mid_bot(self):
+    def mid_pt1_4(self):
         return (
             self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
             - self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
         ) / 2
-
-    @property
-    def bot_right(self):
-        return self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
 
     # endregion
 
