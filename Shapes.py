@@ -256,6 +256,29 @@ class My_Shape:
         return self._matrix.mean(dim="pt")
 
     @property
+    def pts(self):
+        return {
+            "pt{}".format(pt): self._matrix.loc[dict(pt="pt{}".format(pt))]
+            for pt in range(1, self._matrix.sizes["pt"] + 1)
+        }
+
+    @property
+    def mid_pts(self):
+        mid_pts_dict = {
+            "mid_pt_{}_{}".format(pt, pt + 1): (
+                self._matrix.loc[dict(pt="pt{}".format(pt + 1))]
+                - self._matrix.loc[dict(pt="pt{}".format(pt))]
+            )
+            / 2
+            for pt in range(1, self._matrix.sizes["pt"])
+        }
+        mid_pts_dict["mid_pt_{}_{}".format(1, self._matrix.sizes["pt"])] = (
+            self._matrix.loc[dict(pt="pt{}".format(1))]
+            - self._matrix.loc[dict(pt="pt{}".format(self._matrix.sizes["pt"]))]
+        ) / 2
+        return mid_pts_dict
+
+    @property
     def bbox_bot_left(self):
         return self._matrix.min(dim="pt")
 
@@ -413,51 +436,4 @@ class My_Rectangle(My_Shape):
         elif ref_pt == "mid_bot":
             self.translate(-width / 2, 0)
         # endregion
-
-    # region #### points on the rectangle
-    @property
-    def pt1(self):
-        return self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
-
-    @property
-    def mid_pt1_2(self):
-        return (
-            self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
-            - self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
-        ) / 2
-
-    @property
-    def pt2(self):
-        return self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
-
-    @property
-    def mid_pt2_3(self):
-        return (
-            self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
-            - self._matrix.loc[dict(dim=["x", "y"], pt="pt2")]
-        ) / 2
-
-    @property
-    def pt3(self):
-        return self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
-
-    @property
-    def mid_pt3_4(self):
-        return (
-            self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
-            - self._matrix.loc[dict(dim=["x", "y"], pt="pt3")]
-        ) / 2
-
-    @property
-    def pt4(self):
-        return self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
-
-    @property
-    def mid_pt1_4(self):
-        return (
-            self._matrix.loc[dict(dim=["x", "y"], pt="pt1")]
-            - self._matrix.loc[dict(dim=["x", "y"], pt="pt4")]
-        ) / 2
-
-    # endregion
 
