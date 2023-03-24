@@ -31,6 +31,70 @@ class My_Shape:
             self._matrix.loc[dict(dim="x", pt="pt{}".format(i + 1))] = xy_pair[0]
             self._matrix.loc[dict(dim="y", pt="pt{}".format(i + 1))] = xy_pair[1]
 
+    def calc_bbox_pts(self):
+        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+            self._bbox_pts = xr.DataArray(
+                np.ones((3, 8)),
+                dims=["dim", "pt"],
+                coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
+            )
+
+            center_x = self.centroid.loc[dict(dim="x")]
+            center_y = self.centroid.loc[dict(dim="y")]
+            x1 = math.sqrt(
+                self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
+            )
+            y1 = math.sqrt(
+                self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
+            )
+
+            self._bbox_pts.loc[dict(dim="x", pt="bot_left")] = center_x - x1
+            self._bbox_pts.loc[dict(dim="y", pt="bot_left")] = center_y - y1
+            self._bbox_pts.loc[dict(dim="x", pt="mid_left")] = center_x - x1
+            self._bbox_pts.loc[dict(dim="y", pt="mid_left")] = center_y
+            self._bbox_pts.loc[dict(dim="x", pt="top_left")] = center_x - x1
+            self._bbox_pts.loc[dict(dim="y", pt="top_left")] = center_y + y1
+            self._bbox_pts.loc[dict(dim="x", pt="mid_top")] = center_x
+            self._bbox_pts.loc[dict(dim="y", pt="mid_top")] = center_y + y1
+            self._bbox_pts.loc[dict(dim="x", pt="top_right")] = center_x + x1
+            self._bbox_pts.loc[dict(dim="y", pt="top_right")] = center_y + y1
+            self._bbox_pts.loc[dict(dim="x", pt="mid_right")] = center_x + x1
+            self._bbox_pts.loc[dict(dim="y", pt="mid_right")] = center_y
+            self._bbox_pts.loc[dict(dim="x", pt="bot_right")] = center_x + x1
+            self._bbox_pts.loc[dict(dim="y", pt="bot_right")] = center_y - y1
+            self._bbox_pts.loc[dict(dim="x", pt="mid_bot")] = center_x
+            self._bbox_pts.loc[dict(dim="y", pt="mid_bot")] = center_y - y1
+        else:
+            self._bbox_pts = xr.DataArray(
+                np.ones((3, 8)),
+                dims=["dim", "pt"],
+                coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
+            )
+
+            center_x = self.centroid.loc[dict(dim="x")]
+            center_y = self.centroid.loc[dict(dim="y")]
+            x_min = self._matrix.min(dim="pt").loc[dict(dim="x")]
+            y_min = self._matrix.min(dim="pt").loc[dict(dim="y")]
+            x_max = self._matrix.max(dim="pt").loc[dict(dim="x")]
+            y_max = self._matrix.max(dim="pt").loc[dict(dim="y")]
+
+            self._bbox_pts.loc[dict(dim="x", pt="bot_left")] = x_min
+            self._bbox_pts.loc[dict(dim="y", pt="bot_left")] = y_min
+            self._bbox_pts.loc[dict(dim="x", pt="mid_left")] = x_min
+            self._bbox_pts.loc[dict(dim="y", pt="mid_left")] = center_y
+            self._bbox_pts.loc[dict(dim="x", pt="top_left")] = x_min
+            self._bbox_pts.loc[dict(dim="y", pt="top_left")] = y_max
+            self._bbox_pts.loc[dict(dim="x", pt="mid_top")] = center_x
+            self._bbox_pts.loc[dict(dim="y", pt="mid_top")] = y_max
+            self._bbox_pts.loc[dict(dim="x", pt="top_right")] = x_max
+            self._bbox_pts.loc[dict(dim="y", pt="top_right")] = y_max
+            self._bbox_pts.loc[dict(dim="x", pt="mid_right")] = x_max
+            self._bbox_pts.loc[dict(dim="y", pt="mid_right")] = center_y
+            self._bbox_pts.loc[dict(dim="x", pt="bot_right")] = x_max
+            self._bbox_pts.loc[dict(dim="y", pt="bot_right")] = y_min
+            self._bbox_pts.loc[dict(dim="x", pt="mid_bot")] = center_x
+            self._bbox_pts.loc[dict(dim="y", pt="mid_bot")] = y_min
+
     # region #### Functions
     def translate(self, tx, ty):
         self._matrix = xr.DataArray(
@@ -38,6 +102,17 @@ class My_Shape:
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
         )
+        self._bbox_pts = xr.DataArray(
+            translation_matrix(tx, ty) @ self._bbox_pts.values,
+            dims=["dim", "pt"],
+            coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
+        )
+        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+            self._control_pts = xr.DataArray(
+                translation_matrix(tx, ty) @ self._control_pts.values,
+                dims=["dim", "pt"],
+                coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
+            )
 
     def scale(self, sx, sy):
         self._matrix = xr.DataArray(
@@ -48,8 +123,26 @@ class My_Shape:
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
         )
+        self._bbox_pts = xr.DataArray(
+            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            @ scale_matrix(sx, sy)
+            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ self._bbox_pts.values,
+            dims=["dim", "pt"],
+            coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
+        )
+        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+            self._control_pts = xr.DataArray(
+                translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+                @ scale_matrix(sx, sy)
+                @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+                @ self._control_pts.values,
+                dims=["dim", "pt"],
+                coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
+            )
 
     def rotate(self, r):
+        self._rotation += r
         self._matrix = xr.DataArray(
             translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
             @ rotation_matrix(r)
@@ -58,7 +151,16 @@ class My_Shape:
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
         )
-        self._rotation += r
+        self.calc_bbox_pts()
+        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+            self._control_pts = xr.DataArray(
+                translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+                @ rotation_matrix(r)
+                @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+                @ self._control_pts.values,
+                dims=["dim", "pt"],
+                coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
+            )
 
     def move_bbox_xy_to(self, ref_pt, ref_pt_x, ref_pt_y):
         if ref_pt == "center":
@@ -228,69 +330,35 @@ class My_Shape:
 
     @property
     def bbox_bot_left(self):
-        return self._matrix.min(dim="pt")
+        return self._bbox_pts.loc[dict(pt="bot_left")]
 
     @property
     def bbox_mid_left(self):
-        temp_array = np.array(
-            [
-                self._matrix.min(dim="pt").loc[dict(dim="x")],
-                ((self._matrix.max(dim="pt").loc[dict(dim="y")] - self._matrix.min(dim="pt").loc[dict(dim="y")]) / 2)
-                + self._matrix.min(dim="pt").loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="mid_left")]
 
     @property
     def bbox_top_left(self):
-        temp_array = np.array([self._matrix.min(dim="pt").loc[dict(dim="x")], self._matrix.max(dim="pt").loc[dict(dim="y")], 1,])
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="top_left")]
 
     @property
     def bbox_mid_top(self):
-        temp_array = np.array(
-            [
-                ((self._matrix.max(dim="pt").loc[dict(dim="x")] - self._matrix.min(dim="pt").loc[dict(dim="x")]) / 2)
-                + self._matrix.min(dim="pt").loc[dict(dim="x")],
-                self._matrix.max(dim="pt").loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="mid_top")]
 
     @property
     def bbox_top_right(self):
-        return self._matrix.max(dim="pt")
+        return self._bbox_pts.loc[dict(pt="top_right")]
 
     @property
     def bbox_mid_right(self):
-        temp_array = np.array(
-            [
-                self._matrix.max(dim="pt").loc[dict(dim="x")],
-                ((self._matrix.max(dim="pt").loc[dict(dim="y")] - self._matrix.min(dim="pt").loc[dict(dim="y")]) / 2)
-                + self._matrix.min(dim="pt").loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="mid_right")]
 
     @property
     def bbox_bot_right(self):
-        temp_array = np.array([self._matrix.max(dim="pt").loc[dict(dim="x")], self._matrix.min(dim="pt").loc[dict(dim="y")], 1,])
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="bot_right")]
 
     @property
     def bbox_mid_bot(self):
-        temp_array = np.array(
-            [
-                ((self._matrix.max(dim="pt").loc[dict(dim="x")] - self._matrix.min(dim="pt").loc[dict(dim="x")]) / 2)
-                + self._matrix.min(dim="pt").loc[dict(dim="x")],
-                self._matrix.min(dim="pt").loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
+        return self._bbox_pts.loc[dict(pt="mid_bot")]
 
     # endregion
 
@@ -313,6 +381,8 @@ class My_Rectangle(My_Shape):
         self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
         self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + width
         self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+
+        self.calc_bbox_pts()
 
         # region #### reference site definitions
         if ref_pt == "center":
@@ -353,6 +423,21 @@ class My_Circle(My_Shape):
         self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + radius
         self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y - radius
 
+        self.calc_control_pts()
+        self.calc_bbox_pts()
+
+        # region #### reference site definitions
+        if ref_pt == "center":
+            self.translate(-radius, 0)
+        elif ref_pt == "top":
+            self.translate(-radius, -radius)
+        elif ref_pt == "right":
+            self.translate(-2 * radius, 0)
+        elif ref_pt == "bot":
+            self.translate(radius, radius)
+        # endregion
+
+    def calc_control_pts(self):
         self._control_pts = xr.DataArray(
             np.ones((3, 8)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4", "pt5", "pt6", "pt7", "pt8"],},
         )
@@ -373,66 +458,6 @@ class My_Circle(My_Shape):
         self._control_pts.loc[dict(dim="y", pt="pt7")] = self._matrix.loc[dict(dim="y", pt="pt4")]
         self._control_pts.loc[dict(dim="x", pt="pt8")] = self._matrix.loc[dict(dim="x", pt="pt1")]
         self._control_pts.loc[dict(dim="y", pt="pt8")] = self._matrix.loc[dict(dim="y", pt="pt1")] - (bezier_curve_approx * self.y_radius)
-
-        # region #### reference site definitions
-        if ref_pt == "center":
-            self.translate(-radius, 0)
-        elif ref_pt == "top":
-            self.translate(-radius, -radius)
-        elif ref_pt == "right":
-            self.translate(-2 * radius, 0)
-        elif ref_pt == "bot":
-            self.translate(radius, radius)
-        # endregion
-
-    def translate(self, tx, ty):
-        self._matrix = xr.DataArray(
-            translation_matrix(tx, ty) @ self._matrix.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
-        )
-        self._control_pts = xr.DataArray(
-            translation_matrix(tx, ty) @ self._control_pts.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
-        )
-
-    def scale(self, sx, sy):
-        self._matrix = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
-            @ scale_matrix(sx, sy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
-            @ self._matrix.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
-        )
-        self._control_pts = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
-            @ scale_matrix(sx, sy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
-            @ self._control_pts.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
-        )
-
-    def rotate(self, r):
-        self._matrix = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
-            @ rotation_matrix(r)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
-            @ self._matrix.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
-        )
-        self._control_pts = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
-            @ rotation_matrix(r)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
-            @ self._control_pts.values,
-            dims=["dim", "pt"],
-            coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
-        )
-        self._rotation += r
 
     def draw_fill(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
@@ -514,157 +539,31 @@ class My_Circle(My_Shape):
 
     @property
     def radius(self):
-        current_rotation = self._rotation
-        self.rotate(-current_rotation)
-        radius = abs(self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")])
-        self.rotate(current_rotation)
-        return radius
+        return np.sqrt(
+            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2
+            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2
+        )
 
     @property
     def x_radius(self):
-        current_rotation = self._rotation
-        self.rotate(-current_rotation)
-        x_radius = abs(self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")])
-        self.rotate(current_rotation)
-        return x_radius
+        return np.sqrt(
+            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2
+            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2
+        )
 
     @property
     def y_radius(self):
-        current_rotation = self._rotation
-        self.rotate(-current_rotation)
-        y_radius = abs(self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt2")])
-        self.rotate(current_rotation)
-        return y_radius
-
-    @property
-    def bbox_bot_left(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
+        return np.sqrt(
+            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt2")]) ** 2
+            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt2")]) ** 2
         )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_mid_left(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_top_left(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_mid_top(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")],
-                self.centroid.loc[dict(dim="y")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_top_right(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_mid_right(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")],
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_bot_right(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")]
-                + math.sqrt(
-                    self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
-                ),
-                self.centroid.loc[dict(dim="y")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
-
-    @property
-    def bbox_mid_bot(self):
-        temp_array = np.array(
-            [
-                self.centroid.loc[dict(dim="x")],
-                self.centroid.loc[dict(dim="y")]
-                - math.sqrt(
-                    self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
-                ),
-                1,
-            ]
-        )
-        return xr.DataArray(temp_array, dims=["dim"], coords={"dim": ["x", "y", "z"],},)
 
 
 class My_Ellipse(My_Circle):
     def __init__(self, ref_pt, ref_pt_x, ref_pt_y, x_radius, y_radius):
         super().__init__(ref_pt, ref_pt_x, ref_pt_y, 1)
         self.scale(x_radius, y_radius)
+        self.calc_bbox_pts()
 
     @property
     def radius(self):
