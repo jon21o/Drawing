@@ -498,6 +498,53 @@ class My_Circle(My_Shape):
         )
         context.fill()
 
+    def draw_half_fill(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values, self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt3")],
+            self._control_pts.loc[dict(dim="y", pt="pt3")],
+            self._control_pts.loc[dict(dim="x", pt="pt4")],
+            self._control_pts.loc[dict(dim="y", pt="pt4")],
+            self._matrix.loc[dict(dim="x", pt="pt3")].values,
+            self._matrix.loc[dict(dim="y", pt="pt3")].values,
+        )
+        context.line_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
+        )
+        context.fill()
+
+    def draw_quarter_fill(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values, self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.line_to(
+            self.centroid.loc[dict(dim="x")], self.centroid.loc[dict(dim="y")],
+        )
+        context.line_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
+        )
+        context.fill()
+
     def draw_stroke(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
         context.move_to(
@@ -534,6 +581,53 @@ class My_Circle(My_Shape):
             self._control_pts.loc[dict(dim="y", pt="pt8")],
             self._matrix.loc[dict(dim="x", pt="pt1")].values,
             self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.stroke()
+
+    def draw_half_stroke(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values, self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt3")],
+            self._control_pts.loc[dict(dim="y", pt="pt3")],
+            self._control_pts.loc[dict(dim="x", pt="pt4")],
+            self._control_pts.loc[dict(dim="y", pt="pt4")],
+            self._matrix.loc[dict(dim="x", pt="pt3")].values,
+            self._matrix.loc[dict(dim="y", pt="pt3")].values,
+        )
+        context.line_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
+        )
+        context.stroke()
+
+    def draw_quarter_stroke(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values, self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.line_to(
+            self.centroid.loc[dict(dim="x")], self.centroid.loc[dict(dim="y")],
+        )
+        context.line_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
         )
         context.stroke()
 
