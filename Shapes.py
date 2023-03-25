@@ -404,6 +404,80 @@ class My_Rectangle(My_Shape):
         # endregion
 
 
+class My_Trapezoid(My_Shape):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, bot_width=None, top_width=None, height=None, angle=None, rotation=0):
+        # pt1 --> bot left
+        # pt2 --> top left
+        # pt3 --> top right
+        # pt4 --> bot right
+        self._rotation = rotation
+        self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
+
+        # start with ref_pt = "bot_left" and translate to different ref_pts below
+        if (bot_width != None) & (top_width != None) & (height != None):
+            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
+            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
+            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x + (bot_width - top_width) / 2
+            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + top_width + (bot_width - top_width) / 2
+            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + bot_width
+            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+        elif (bot_width != None) & (angle != None) & (height != None):
+            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
+            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
+            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x + (math.atan(math.radians(angle)) * height)
+            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt3")] = ref_pt_x + bot_width - (math.atan(math.radians(angle)) * height)
+            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + bot_width
+            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+
+        self.calc_bbox_pts()
+
+        # region #### reference site definitions
+        if ref_pt == "center":
+            self.translate(
+                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
+                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+            )
+        elif ref_pt == "mid_left":
+            self.translate(
+                (self._matrix.loc[dict(dim="x", pt="pt2")] - self._matrix.loc[dict(dim="x", pt="pt1")]) / 2,
+                (self._matrix.loc[dict(dim="y", pt="pt2")] - self._matrix.loc[dict(dim="y", pt="pt1")]) / 2,
+            )
+        elif ref_pt == "top_left":
+            self.translate(
+                self._matrix.loc[dict(dim="x", pt="pt2")] - self._matrix.loc[dict(dim="x", pt="pt1")],
+                self._matrix.loc[dict(dim="y", pt="pt2")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+            )
+        elif ref_pt == "mid_top":
+            self.translate(
+                (self._matrix.loc[dict(dim="x", pt="pt4")] - self._matrix.loc[dict(dim="x", pt="pt1")]) / 2,
+                (self._matrix.loc[dict(dim="y", pt="pt3")] - self._matrix.loc[dict(dim="y", pt="pt1")]),
+            )
+        elif ref_pt == "top_right":
+            self.translate(
+                self._matrix.loc[dict(dim="x", pt="pt3")] - self._matrix.loc[dict(dim="x", pt="pt1")],
+                self._matrix.loc[dict(dim="y", pt="pt3")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+            )
+        elif ref_pt == "mid_right":
+            self.translate(
+                (self._matrix.loc[dict(dim="x", pt="pt4")] - self._matrix.loc[dict(dim="x", pt="pt1")])
+                + ((self._matrix.loc[dict(dim="x", pt="pt3")] - self._matrix.loc[dict(dim="x", pt="pt4")]) / 2),
+                (self._matrix.loc[dict(dim="y", pt="pt3")] - self._matrix.loc[dict(dim="y", pt="pt4")]) / 2,
+            )
+        elif ref_pt == "bot_right":
+            self.translate(
+                self._matrix.loc[dict(dim="x", pt="pt4")] - self._matrix.loc[dict(dim="x", pt="pt1")], 0,
+            )
+        elif ref_pt == "mid_bot":
+            self.translate(
+                (self._matrix.loc[dict(dim="x", pt="pt4")] - self._matrix.loc[dict(dim="x", pt="pt1")]) / 2, 0,
+            )
+        # endregion
+
+
 class My_Circle(My_Shape):
     def __init__(self, ref_pt, ref_pt_x, ref_pt_y, radius, rotation=0):
         # pt1 --> left
