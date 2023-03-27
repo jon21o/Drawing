@@ -3,6 +3,13 @@ import numpy as np
 import xarray as xr
 import cairo
 
+# region colors
+colors = {}
+colors["white"] = [1, 1, 1]
+colors["black"] = [0, 0, 0]
+
+# endregion
+
 
 def translation_matrix(tx, ty):
     return np.array([[1, 0, tx], [0, 1, ty], [0, 0, 1]])
@@ -392,6 +399,29 @@ class My_Shape:
         return self._bbox_pts.loc[dict(pt="mid_bot")]
 
     # endregion
+
+
+class My_Line_Coord(My_Shape):
+    def __init__(self, xy_pairs):
+        super().__init__(xy_pairs)
+
+
+class My_Line_Relative(My_Shape):
+    def __init__(self, xy_pairs, angular=False):
+        super().__init__(xy_pairs)
+
+    def draw_stroke(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        for pt in self._matrix.coords["pt"]:
+            if pt.values == "pt1":
+                context.move_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+            else:
+                context.rel_line_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+        context.stroke()
 
 
 class My_Rectangle(My_Shape):
