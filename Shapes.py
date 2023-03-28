@@ -2,13 +2,7 @@ import math
 import numpy as np
 import xarray as xr
 import cairo
-
-# region colors
-colors = {}
-colors["white"] = [1, 1, 1]
-colors["black"] = [0, 0, 0]
-
-# endregion
+from rgb_colors import colors
 
 
 def translation_matrix(tx, ty):
@@ -50,8 +44,8 @@ class My_Shape:
                 coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
             )
 
-            center_x = self.centroid.loc[dict(dim="x")]
-            center_y = self.centroid.loc[dict(dim="y")]
+            center_x = self.centroid_x
+            center_y = self.centroid_y
             x1 = math.sqrt(
                 self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
             )
@@ -82,8 +76,8 @@ class My_Shape:
                 coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
             )
 
-            center_x = self.centroid.loc[dict(dim="x")]
-            center_y = self.centroid.loc[dict(dim="y")]
+            center_x = self.centroid_x
+            center_y = self.centroid_y
             x_min = self._matrix.min(dim="pt").loc[dict(dim="x")]
             y_min = self._matrix.min(dim="pt").loc[dict(dim="y")]
             x_max = self._matrix.max(dim="pt").loc[dict(dim="x")]
@@ -127,26 +121,26 @@ class My_Shape:
 
     def scale(self, sx, sy):
         self._matrix = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            translation_matrix(self.centroid_x.values, self.centroid_y.values,)
             @ scale_matrix(sx, sy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
             @ self._matrix.values,
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
         )
         self._bbox_pts = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            translation_matrix(self.centroid_x.values, self.centroid_y.values,)
             @ scale_matrix(sx, sy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
             @ self._bbox_pts.values,
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
         )
         if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
             self._control_pts = xr.DataArray(
-                translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+                translation_matrix(self.centroid_x.values, self.centroid_y.values,)
                 @ scale_matrix(sx, sy)
-                @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+                @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
                 @ self._control_pts.values,
                 dims=["dim", "pt"],
                 coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
@@ -154,26 +148,26 @@ class My_Shape:
 
     def shear(self, shx, shy):
         self._matrix = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            translation_matrix(self.centroid_x.values, self.centroid_y.values,)
             @ shear_matrix(shx, shy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
             @ self._matrix.values,
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
         )
         self._bbox_pts = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            translation_matrix(self.centroid_x.values, self.centroid_y.values,)
             @ shear_matrix(shx, shy)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
             @ self._bbox_pts.values,
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"],},
         )
         if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
             self._control_pts = xr.DataArray(
-                translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+                translation_matrix(self.centroid_x.values, self.centroid_y.values,)
                 @ shear_matrix(shx, shy)
-                @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+                @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
                 @ self._control_pts.values,
                 dims=["dim", "pt"],
                 coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
@@ -182,9 +176,9 @@ class My_Shape:
     def rotate(self, r):
         self._rotation += r
         self._matrix = xr.DataArray(
-            translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+            translation_matrix(self.centroid_x.values, self.centroid_y.values,)
             @ rotation_matrix(r)
-            @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+            @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
             @ self._matrix.values,
             dims=["dim", "pt"],
             coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._matrix.sizes["pt"] + 1)],},
@@ -192,9 +186,9 @@ class My_Shape:
         self.calc_bbox_pts()
         if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
             self._control_pts = xr.DataArray(
-                translation_matrix(self.centroid.loc[dict(dim="x")].values, self.centroid.loc[dict(dim="y")].values,)
+                translation_matrix(self.centroid_x.values, self.centroid_y.values,)
                 @ rotation_matrix(r)
-                @ translation_matrix(-self.centroid.loc[dict(dim="x")].values, -self.centroid.loc[dict(dim="y")].values,)
+                @ translation_matrix(-self.centroid_x.values, -self.centroid_y.values,)
                 @ self._control_pts.values,
                 dims=["dim", "pt"],
                 coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, self._control_pts.sizes["pt"] + 1)],},
@@ -203,115 +197,115 @@ class My_Shape:
     def move_bbox_xy_to(self, ref_pt, ref_pt_x, ref_pt_y):
         if ref_pt == "center":
             self.translate(
-                ref_pt_x - self.centroid.loc[dict(dim="x")], ref_pt_y - self.centroid.loc[dict(dim="y")],
+                ref_pt_x - self.centroid_x, ref_pt_y - self.centroid_y,
             )
         if ref_pt == "bot_left":
             self.translate(
-                ref_pt_x - self.bbox_bot_left.loc[dict(dim="x")], ref_pt_y - self.bbox_bot_left.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_bot_left_x, ref_pt_y - self.bbox_bot_left_y,
             )
         if ref_pt == "mid_left":
             self.translate(
-                ref_pt_x - self.bbox_mid_left.loc[dict(dim="x")], ref_pt_y - self.bbox_mid_left.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_mid_left_x, ref_pt_y - self.bbox_mid_left_y,
             )
         if ref_pt == "top_left":
             self.translate(
-                ref_pt_x - self.bbox_top_left.loc[dict(dim="x")], ref_pt_y - self.bbox_top_left.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_top_left_x, ref_pt_y - self.bbox_top_left_y,
             )
         if ref_pt == "mid_top":
             self.translate(
-                ref_pt_x - self.bbox_mid_top.loc[dict(dim="x")], ref_pt_y - self.bbox_mid_top.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_mid_top_x, ref_pt_y - self.bbox_mid_top_y,
             )
         if ref_pt == "top_right":
             self.translate(
-                ref_pt_x - self.bbox_top_right.loc[dict(dim="x")], ref_pt_y - self.bbox_top_right.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_top_right_x, ref_pt_y - self.bbox_top_right_y,
             )
         if ref_pt == "mid_right":
             self.translate(
-                ref_pt_x - self.bbox_mid_right.loc[dict(dim="x")], ref_pt_y - self.bbox_mid_right.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_mid_right_x, ref_pt_y - self.bbox_mid_right_y,
             )
         if ref_pt == "bot_right":
             self.translate(
-                ref_pt_x - self.bbox_bot_right.loc[dict(dim="x")], ref_pt_y - self.bbox_bot_right.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_bot_right_x, ref_pt_y - self.bbox_bot_right_y,
             )
         if ref_pt == "mid_bot":
             self.translate(
-                ref_pt_x - self.bbox_mid_bot.loc[dict(dim="x")], ref_pt_y - self.bbox_mid_bot.loc[dict(dim="y")],
+                ref_pt_x - self.bbox_mid_bot_x, ref_pt_y - self.bbox_mid_bot_y,
             )
 
     def move_bbox_x_to(self, ref_pt, ref_pt_x):
         if ref_pt == "center":
             self.translate(
-                ref_pt_x - self.centroid.loc[dict(dim="x")], 0,
+                ref_pt_x - self.centroid_x, 0,
             )
         if ref_pt == "bot_left":
             self.translate(
-                ref_pt_x - self.bbox_bot_left.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_bot_left_x, 0,
             )
         if ref_pt == "mid_left":
             self.translate(
-                ref_pt_x - self.bbox_mid_left.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_mid_left_x, 0,
             )
         if ref_pt == "top_left":
             self.translate(
-                ref_pt_x - self.bbox_top_left.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_top_left_x, 0,
             )
         if ref_pt == "mid_top":
             self.translate(
-                ref_pt_x - self.bbox_mid_top.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_mid_top_x, 0,
             )
         if ref_pt == "top_right":
             self.translate(
-                ref_pt_x - self.bbox_top_right.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_top_right_x, 0,
             )
         if ref_pt == "mid_right":
             self.translate(
-                ref_pt_x - self.bbox_mid_right.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_mid_right_x, 0,
             )
         if ref_pt == "bot_right":
             self.translate(
-                ref_pt_x - self.bbox_bot_right.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_bot_right_x, 0,
             )
         if ref_pt == "mid_bot":
             self.translate(
-                ref_pt_x - self.bbox_mid_bot.loc[dict(dim="x")], 0,
+                ref_pt_x - self.bbox_mid_bot_x, 0,
             )
 
     def move_bbox_y_to(self, ref_pt, ref_pt_y):
         if ref_pt == "center":
             self.translate(
-                0, ref_pt_y - self.centroid.loc[dict(dim="y")],
+                0, ref_pt_y - self.centroid_y,
             )
         if ref_pt == "bot_left":
             self.translate(
-                0, ref_pt_y - self.bbox_bot_left.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_bot_left_y,
             )
         if ref_pt == "mid_left":
             self.translate(
-                0, ref_pt_y - self.bbox_mid_left.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_mid_left_y,
             )
         if ref_pt == "top_left":
             self.translate(
-                0, ref_pt_y - self.bbox_top_left.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_top_left_y,
             )
         if ref_pt == "mid_top":
             self.translate(
-                0, ref_pt_y - self.bbox_mid_top.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_mid_top_y,
             )
         if ref_pt == "top_right":
             self.translate(
-                0, ref_pt_y - self.bbox_top_right.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_top_right_y,
             )
         if ref_pt == "mid_right":
             self.translate(
-                0, ref_pt_y - self.bbox_mid_right.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_mid_right_y,
             )
         if ref_pt == "bot_right":
             self.translate(
-                0, ref_pt_y - self.bbox_bot_right.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_bot_right_y,
             )
         if ref_pt == "mid_bot":
             self.translate(
-                0, ref_pt_y - self.bbox_mid_bot.loc[dict(dim="y")],
+                0, ref_pt_y - self.bbox_mid_bot_y,
             )
 
     def draw_stroke(self, context, color1, color2, color3):
@@ -344,8 +338,12 @@ class My_Shape:
 
     # region #### Properties
     @property
-    def centroid(self):
-        return self._matrix.mean(dim="pt")
+    def centroid_x(self):
+        return self._matrix.mean(dim="pt").loc[dict(dim="x")]
+
+    @property
+    def centroid_y(self):
+        return self._matrix.mean(dim="pt").loc[dict(dim="y")]
 
     @property
     def rotation(self):
@@ -367,36 +365,68 @@ class My_Shape:
         return mid_pts_dict
 
     @property
-    def bbox_bot_left(self):
-        return self._bbox_pts.loc[dict(pt="bot_left")]
+    def bbox_bot_left_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="bot_left")]
 
     @property
-    def bbox_mid_left(self):
-        return self._bbox_pts.loc[dict(pt="mid_left")]
+    def bbox_bot_left_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="bot_left")]
 
     @property
-    def bbox_top_left(self):
-        return self._bbox_pts.loc[dict(pt="top_left")]
+    def bbox_mid_left_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="mid_left")]
 
     @property
-    def bbox_mid_top(self):
-        return self._bbox_pts.loc[dict(pt="mid_top")]
+    def bbox_mid_left_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="mid_left")]
 
     @property
-    def bbox_top_right(self):
-        return self._bbox_pts.loc[dict(pt="top_right")]
+    def bbox_top_left_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="top_left")]
 
     @property
-    def bbox_mid_right(self):
-        return self._bbox_pts.loc[dict(pt="mid_right")]
+    def bbox_top_left_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="top_left")]
 
     @property
-    def bbox_bot_right(self):
-        return self._bbox_pts.loc[dict(pt="bot_right")]
+    def bbox_mid_top_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="mid_top")]
 
     @property
-    def bbox_mid_bot(self):
-        return self._bbox_pts.loc[dict(pt="mid_bot")]
+    def bbox_mid_top_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="mid_top")]
+
+    @property
+    def bbox_top_right_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="top_right")]
+
+    @property
+    def bbox_top_right_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="top_right")]
+
+    @property
+    def bbox_mid_right_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="mid_right")]
+
+    @property
+    def bbox_mid_right_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="mid_right")]
+
+    @property
+    def bbox_bot_right_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="bot_right")]
+
+    @property
+    def bbox_bot_right_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="bot_right")]
+
+    @property
+    def bbox_mid_bot_x(self):
+        return self._bbox_pts.loc[dict(dim="x", pt="mid_bot")]
+
+    @property
+    def bbox_mid_bot_y(self):
+        return self._bbox_pts.loc[dict(dim="y", pt="mid_bot")]
 
     # endregion
 
@@ -409,19 +439,33 @@ class My_Line_Coord(My_Shape):
 class My_Line_Relative(My_Shape):
     def __init__(self, xy_pairs, angular=False):
         super().__init__(xy_pairs)
+        self._angular = angular
 
     def draw_stroke(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
-        for pt in self._matrix.coords["pt"]:
-            if pt.values == "pt1":
-                context.move_to(
-                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
-                )
-            else:
-                context.rel_line_to(
-                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
-                )
-        context.stroke()
+        if self.angular == False:
+            for pt in self._matrix.coords["pt"]:
+                if pt.values == "pt1":
+                    context.move_to(
+                        self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                    )
+                else:
+                    context.rel_line_to(
+                        self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                    )
+            context.stroke()
+        elif self.angular == True:
+            for pt in self._matrix.coords["pt"]:
+                if pt.values == "pt1":
+                    context.move_to(
+                        self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                    )
+                else:
+                    context.rel_line_to(
+                        math.cos(math.radians(self._matrix.loc[dict(dim="x", pt=pt)].values)) * self._matrix.loc[dict(dim="y", pt=pt)].values,
+                        math.sin(math.radians(self._matrix.loc[dict(dim="x", pt=pt)].values)) * self._matrix.loc[dict(dim="y", pt=pt)].values,
+                    )
+            context.stroke()
 
 
 class My_Rectangle(My_Shape):
@@ -499,8 +543,7 @@ class My_Parallelogram(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
-                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+                self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")], self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")],
             )
         elif ref_pt == "mid_left":
             self.translate(
@@ -569,8 +612,7 @@ class My_RightTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
-                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+                self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")], self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")],
             )
         elif ref_pt == "mid_left":
             self.translate(
@@ -627,8 +669,7 @@ class My_IsoscelesTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
-                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+                self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")], self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")],
             )
         elif ref_pt == "mid_left":
             self.translate(
@@ -678,8 +719,7 @@ class My_EquilateralTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
-                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+                self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")], self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")],
             )
         elif ref_pt == "mid_left":
             self.translate(
@@ -742,8 +782,7 @@ class My_Trapezoid(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")],
-                self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")],
+                self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")], self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")],
             )
         elif ref_pt == "mid_left":
             self.translate(
@@ -916,7 +955,7 @@ class My_Circle(My_Shape):
             self._matrix.loc[dict(dim="y", pt="pt2")].values,
         )
         context.line_to(
-            self.centroid.loc[dict(dim="x")], self.centroid.loc[dict(dim="y")],
+            self.centroid_x, self.centroid_y,
         )
         context.line_to(
             self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
@@ -1002,7 +1041,7 @@ class My_Circle(My_Shape):
             self._matrix.loc[dict(dim="y", pt="pt2")].values,
         )
         context.line_to(
-            self.centroid.loc[dict(dim="x")], self.centroid.loc[dict(dim="y")],
+            self.centroid_x, self.centroid_y,
         )
         context.line_to(
             self._matrix.loc[dict(dim="x", pt="pt1")], self._matrix.loc[dict(dim="y", pt="pt1")],
@@ -1011,24 +1050,15 @@ class My_Circle(My_Shape):
 
     @property
     def radius(self):
-        return np.sqrt(
-            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2
-            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2
-        )
+        return np.sqrt((self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2 + (self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2)
 
     @property
     def x_radius(self):
-        return np.sqrt(
-            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2
-            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2
-        )
+        return np.sqrt((self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2 + (self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2)
 
     @property
     def y_radius(self):
-        return np.sqrt(
-            (self.centroid.loc[dict(dim="x")] - self._matrix.loc[dict(dim="x", pt="pt2")]) ** 2
-            + (self.centroid.loc[dict(dim="y")] - self._matrix.loc[dict(dim="y", pt="pt2")]) ** 2
-        )
+        return np.sqrt((self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt2")]) ** 2 + (self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt2")]) ** 2)
 
 
 class My_Ellipse(My_Circle):
