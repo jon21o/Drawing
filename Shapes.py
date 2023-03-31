@@ -308,6 +308,21 @@ class My_Shape:
                 0, ref_pt_y - self.bbox_mid_bot_y,
             )
 
+    def move_pt_xy_to(self, ref_pt_x, ref_pt_y, pt_x, pt_y):
+        self.translate(
+            pt_x - ref_pt_x, pt_y - ref_pt_y,
+        )
+
+    def move_pt_x_to(self, ref_pt_x, pt_x):
+        self.translate(
+            pt_x - ref_pt_x, 0,
+        )
+
+    def move_pt_y_to(self, ref_pt_y, pt_y):
+        self.translate(
+            0, pt_y - ref_pt_y,
+        )
+
     def draw_stroke(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
         for pt in self._matrix.coords["pt"]:
@@ -392,18 +407,39 @@ class My_Shape:
         return self._rotation
 
     @property
-    def pts(self):
-        return {"pt{}".format(pt): self._matrix.loc[dict(pt="pt{}".format(pt))] for pt in range(1, self._matrix.sizes["pt"] + 1)}
+    def pts_x(self):
+        return {"pt{}".format(pt): self._matrix.loc[dict(dim="x", pt="pt{}".format(pt))] for pt in range(1, self._matrix.sizes["pt"] + 1)}
 
     @property
-    def mid_pts(self):
+    def pts_y(self):
+        return {"pt{}".format(pt): self._matrix.loc[dict(dim="y", pt="pt{}".format(pt))] for pt in range(1, self._matrix.sizes["pt"] + 1)}
+
+    @property
+    def mid_pts_x(self):
         mid_pts_dict = {
-            "mid_pt_{}_{}".format(pt, pt + 1): (self._matrix.loc[dict(pt="pt{}".format(pt + 1))] - self._matrix.loc[dict(pt="pt{}".format(pt))]) / 2
+            "mid_pt_{}_{}".format(pt + 1, pt): (
+                (self._matrix.loc[dict(dim="x", pt="pt{}".format(pt + 1))] - self._matrix.loc[dict(dim="x", pt="pt{}".format(pt))]) / 2
+            )
+            + self._matrix.loc[dict(dim="x", pt="pt{}".format(pt))]
             for pt in range(1, self._matrix.sizes["pt"])
         }
-        mid_pts_dict["mid_pt_{}_{}".format(1, self._matrix.sizes["pt"])] = (
-            self._matrix.loc[dict(pt="pt{}".format(1))] - self._matrix.loc[dict(pt="pt{}".format(self._matrix.sizes["pt"]))]
-        ) / 2
+        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.sizes["pt"], 1)] = (
+            (self._matrix.loc[dict(dim="x", pt="pt{}".format(1))] - self._matrix.loc[dict(dim="x", pt="pt{}".format(self._matrix.sizes["pt"]))]) / 2
+        ) + self._matrix.loc[dict(dim="x", pt="pt{}".format(self._matrix.sizes["pt"]))]
+        return mid_pts_dict
+
+    @property
+    def mid_pts_y(self):
+        mid_pts_dict = {
+            "mid_pt_{}_{}".format(pt + 1, pt): (
+                (self._matrix.loc[dict(dim="y", pt="pt{}".format(pt + 1))] - self._matrix.loc[dict(dim="y", pt="pt{}".format(pt))]) / 2
+            )
+            + self._matrix.loc[dict(dim="y", pt="pt{}".format(pt))]
+            for pt in range(1, self._matrix.sizes["pt"])
+        }
+        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.sizes["pt"], 1)] = (
+            (self._matrix.loc[dict(dim="y", pt="pt{}".format(1))] - self._matrix.loc[dict(dim="y", pt="pt{}".format(self._matrix.sizes["pt"]))]) / 2
+        ) + self._matrix.loc[dict(dim="y", pt="pt{}".format(self._matrix.sizes["pt"]))]
         return mid_pts_dict
 
     @property
