@@ -25,10 +25,10 @@ bezier_curve_approx = (4 / 3) * math.tan(math.pi / 8)
 
 
 class My_Shape:
-    def __init__(self, xy_pairs, rotation=0):
+    def __init__(self, xy_pairs):
         # xy_pairs = [[x1, y1], [x2, y2], [x3, y3], etc.]
         num_pts = len(xy_pairs)
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(
             np.ones((3, num_pts)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt{}".format(x) for x in range(1, num_pts + 1)],},
         )
@@ -391,6 +391,19 @@ class My_Shape:
                 )
         context.fill()
 
+    def clip(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        for pt in self._matrix.coords["pt"]:
+            if pt.values == "pt1":
+                context.move_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+            else:
+                context.line_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values, self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+        context.clip()
+
     # endregion
 
     # region #### Properties
@@ -547,12 +560,12 @@ class My_Line_Relative(My_Shape):
 
 
 class My_Rectangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width, height, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width, height):
         # pt1 --> bot left
         # pt2 --> top left
         # pt3 --> top right
         # pt4 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -588,12 +601,12 @@ class My_Rectangle(My_Shape):
 
 
 class My_Parallelogram(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None, offset=None, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None, offset=None):
         # pt1 --> bot left
         # pt2 --> top left
         # pt3 --> top right
         # pt4 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -663,11 +676,11 @@ class My_Parallelogram(My_Shape):
 
 
 class My_RightTriangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None):
         # pt1 --> bot left
         # pt2 --> top left
         # pt3 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 3)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -721,11 +734,11 @@ class My_RightTriangle(My_Shape):
 
 
 class My_IsoscelesTriangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None):
         # pt1 --> bot left
         # pt2 --> mid top
         # pt3 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 3)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -781,11 +794,11 @@ class My_IsoscelesTriangle(My_Shape):
 
 
 class My_EquilateralTriangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None):
         # pt1 --> bot left
         # pt2 --> mid top
         # pt3 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 3)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -833,12 +846,12 @@ class My_EquilateralTriangle(My_Shape):
 
 
 class My_Trapezoid(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, bot_width=None, top_width=None, height=None, angle=None, rotation=0):
+    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, bot_width=None, top_width=None, height=None, angle=None):
         # pt1 --> bot left
         # pt2 --> top left
         # pt3 --> top right
         # pt4 --> bot right
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
@@ -908,12 +921,14 @@ class My_Trapezoid(My_Shape):
 
 
 class My_Circle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, radius, rotation=0):
+    def __init__(
+        self, ref_pt, ref_pt_x, ref_pt_y, radius,
+    ):
         # pt1 --> left
         # pt2 --> top
         # pt3 --> right
         # pt4 --> bot
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
 
         # start with ref_pt = "mid_left" and translate to different ref_pts below
@@ -1142,6 +1157,45 @@ class My_Circle(My_Shape):
         )
         context.stroke()
 
+    def clip(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values, self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt3")],
+            self._control_pts.loc[dict(dim="y", pt="pt3")],
+            self._control_pts.loc[dict(dim="x", pt="pt4")],
+            self._control_pts.loc[dict(dim="y", pt="pt4")],
+            self._matrix.loc[dict(dim="x", pt="pt3")].values,
+            self._matrix.loc[dict(dim="y", pt="pt3")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt5")],
+            self._control_pts.loc[dict(dim="y", pt="pt5")],
+            self._control_pts.loc[dict(dim="x", pt="pt6")],
+            self._control_pts.loc[dict(dim="y", pt="pt6")],
+            self._matrix.loc[dict(dim="x", pt="pt4")].values,
+            self._matrix.loc[dict(dim="y", pt="pt4")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt7")],
+            self._control_pts.loc[dict(dim="y", pt="pt7")],
+            self._control_pts.loc[dict(dim="x", pt="pt8")],
+            self._control_pts.loc[dict(dim="y", pt="pt8")],
+            self._matrix.loc[dict(dim="x", pt="pt1")].values,
+            self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.clip()
+
     @property
     def radius(self):
         return np.sqrt((self.centroid_x - self._matrix.loc[dict(dim="x", pt="pt1")]) ** 2 + (self.centroid_y - self._matrix.loc[dict(dim="y", pt="pt1")]) ** 2)
@@ -1156,12 +1210,14 @@ class My_Circle(My_Shape):
 
 
 class My_Ellipse(My_Circle):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, x_radius, y_radius, rotation=0):
+    def __init__(
+        self, ref_pt, ref_pt_x, ref_pt_y, x_radius, y_radius,
+    ):
         # pt1 --> left
         # pt2 --> top
         # pt3 --> right
         # pt4 --> bot
-        self._rotation = rotation
+        self._rotation = 0
         self._matrix = xr.DataArray(np.ones((3, 4)), dims=["dim", "pt"], coords={"dim": ["x", "y", "z"], "pt": ["pt1", "pt2", "pt3", "pt4"],},)
 
         # start with ref_pt = "mid_left" and translate to different ref_pts below
