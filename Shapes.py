@@ -506,6 +506,22 @@ class My_Shape:
         context.close_path()
         context.stroke()
 
+    def draw_stroke_preserve(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        for pt in self._matrix.coords["pt"]:
+            if pt.values == "pt1":
+                context.move_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values,
+                    self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+            else:
+                context.line_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values,
+                    self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+        context.close_path()
+        context.stroke_preserve()
+
     def draw_stroke_multicolor(self, context, *args):
         for n in range(self._matrix.sizes["pt"] - 1):
             context.set_source_rgb(*args[n])
@@ -548,6 +564,33 @@ class My_Shape:
         context.close_path()
         context.stroke()
 
+    def draw_bbox_stroke_preserve(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(self.bbox_bot_left_x, self.bbox_bot_left_y)
+        context.line_to(
+            self.bbox_mid_left_x, self.bbox_mid_left_y,
+        )
+        context.line_to(
+            self.bbox_top_left_x, self.bbox_top_left_y,
+        )
+        context.line_to(
+            self.bbox_mid_top_x, self.bbox_mid_top_y,
+        )
+        context.line_to(
+            self.bbox_top_right_x, self.bbox_top_right_y,
+        )
+        context.line_to(
+            self.bbox_mid_right_x, self.bbox_mid_right_y,
+        )
+        context.line_to(
+            self.bbox_bot_right_x, self.bbox_bot_right_y,
+        )
+        context.line_to(
+            self.bbox_mid_bot_x, self.bbox_mid_bot_y,
+        )
+        context.close_path()
+        context.stroke_preserve()
+
     def draw_fill(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
         for pt in self._matrix.coords["pt"]:
@@ -562,6 +605,21 @@ class My_Shape:
                     self._matrix.loc[dict(dim="y", pt=pt)].values,
                 )
         context.fill()
+
+    def draw_fill_preserve(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        for pt in self._matrix.coords["pt"]:
+            if pt.values == "pt1":
+                context.move_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values,
+                    self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+            else:
+                context.line_to(
+                    self._matrix.loc[dict(dim="x", pt=pt)].values,
+                    self._matrix.loc[dict(dim="y", pt=pt)].values,
+                )
+        context.fill_preserve()
 
     def clip(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
@@ -1543,6 +1601,46 @@ class My_Circle(My_Shape):
         )
         context.fill()
 
+    def draw_fill_preserve(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values,
+            self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt3")],
+            self._control_pts.loc[dict(dim="y", pt="pt3")],
+            self._control_pts.loc[dict(dim="x", pt="pt4")],
+            self._control_pts.loc[dict(dim="y", pt="pt4")],
+            self._matrix.loc[dict(dim="x", pt="pt3")].values,
+            self._matrix.loc[dict(dim="y", pt="pt3")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt5")],
+            self._control_pts.loc[dict(dim="y", pt="pt5")],
+            self._control_pts.loc[dict(dim="x", pt="pt6")],
+            self._control_pts.loc[dict(dim="y", pt="pt6")],
+            self._matrix.loc[dict(dim="x", pt="pt4")].values,
+            self._matrix.loc[dict(dim="y", pt="pt4")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt7")],
+            self._control_pts.loc[dict(dim="y", pt="pt7")],
+            self._control_pts.loc[dict(dim="x", pt="pt8")],
+            self._control_pts.loc[dict(dim="y", pt="pt8")],
+            self._matrix.loc[dict(dim="x", pt="pt1")].values,
+            self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.fill_preserve()
+
     def draw_half_fill(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
         context.move_to(
@@ -1633,6 +1731,46 @@ class My_Circle(My_Shape):
             self._matrix.loc[dict(dim="y", pt="pt1")].values,
         )
         context.stroke()
+
+    def draw_stroke_preserve(self, context, color1, color2, color3):
+        context.set_source_rgb(color1, color2, color3)
+        context.move_to(
+            self._matrix.loc[dict(dim="x", pt="pt1")].values,
+            self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt1")],
+            self._control_pts.loc[dict(dim="y", pt="pt1")],
+            self._control_pts.loc[dict(dim="x", pt="pt2")],
+            self._control_pts.loc[dict(dim="y", pt="pt2")],
+            self._matrix.loc[dict(dim="x", pt="pt2")].values,
+            self._matrix.loc[dict(dim="y", pt="pt2")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt3")],
+            self._control_pts.loc[dict(dim="y", pt="pt3")],
+            self._control_pts.loc[dict(dim="x", pt="pt4")],
+            self._control_pts.loc[dict(dim="y", pt="pt4")],
+            self._matrix.loc[dict(dim="x", pt="pt3")].values,
+            self._matrix.loc[dict(dim="y", pt="pt3")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt5")],
+            self._control_pts.loc[dict(dim="y", pt="pt5")],
+            self._control_pts.loc[dict(dim="x", pt="pt6")],
+            self._control_pts.loc[dict(dim="y", pt="pt6")],
+            self._matrix.loc[dict(dim="x", pt="pt4")].values,
+            self._matrix.loc[dict(dim="y", pt="pt4")].values,
+        )
+        context.curve_to(
+            self._control_pts.loc[dict(dim="x", pt="pt7")],
+            self._control_pts.loc[dict(dim="y", pt="pt7")],
+            self._control_pts.loc[dict(dim="x", pt="pt8")],
+            self._control_pts.loc[dict(dim="y", pt="pt8")],
+            self._matrix.loc[dict(dim="x", pt="pt1")].values,
+            self._matrix.loc[dict(dim="y", pt="pt1")].values,
+        )
+        context.stroke_preserve()
 
     def draw_half_stroke(self, context, color1, color2, color3):
         context.set_source_rgb(color1, color2, color3)
