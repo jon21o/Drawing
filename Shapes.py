@@ -503,6 +503,7 @@ class My_Shape:
                     self._matrix.loc[dict(dim="x", pt=pt)].values,
                     self._matrix.loc[dict(dim="y", pt=pt)].values,
                 )
+        context.close_path()
         context.stroke()
 
     def draw_stroke_multicolor(self, context, *args):
@@ -544,9 +545,7 @@ class My_Shape:
         context.line_to(
             self.bbox_mid_bot_x, self.bbox_mid_bot_y,
         )
-        context.line_to(
-            self.bbox_bot_left_x, self.bbox_bot_left_y,
-        )
+        context.close_path()
         context.stroke()
 
     def draw_fill(self, context, color1, color2, color3):
@@ -1300,6 +1299,22 @@ class My_Trapezoid(My_Shape):
             self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
             self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + bot_width
             self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
+        elif (top_width != None) & (angle != None) & (height != None):
+            bot_width = (
+                top_width - 2 * math.tan(math.radians(180 - angle)) * height
+            )
+            self._matrix.loc[dict(dim="x", pt="pt1")] = ref_pt_x
+            self._matrix.loc[dict(dim="y", pt="pt1")] = ref_pt_y
+            self._matrix.loc[dict(dim="x", pt="pt2")] = ref_pt_x + (
+                math.tan(math.radians(angle)) * height
+            )
+            self._matrix.loc[dict(dim="y", pt="pt2")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt3")] = (
+                ref_pt_x + bot_width - (math.tan(math.radians(angle)) * height)
+            )
+            self._matrix.loc[dict(dim="y", pt="pt3")] = ref_pt_y + height
+            self._matrix.loc[dict(dim="x", pt="pt4")] = ref_pt_x + bot_width
+            self._matrix.loc[dict(dim="y", pt="pt4")] = ref_pt_y
 
         self.calc_bbox_pts()
 
@@ -1641,10 +1656,7 @@ class My_Circle(My_Shape):
             self._matrix.loc[dict(dim="x", pt="pt3")].values,
             self._matrix.loc[dict(dim="y", pt="pt3")].values,
         )
-        context.line_to(
-            self._matrix.loc[dict(dim="x", pt="pt1")],
-            self._matrix.loc[dict(dim="y", pt="pt1")],
-        )
+        context.close_path()
         context.stroke()
 
     def draw_quarter_stroke(self, context, color1, color2, color3):
@@ -1664,10 +1676,7 @@ class My_Circle(My_Shape):
         context.line_to(
             self.centroid_x, self.centroid_y,
         )
-        context.line_to(
-            self._matrix.loc[dict(dim="x", pt="pt1")],
-            self._matrix.loc[dict(dim="y", pt="pt1")],
-        )
+        context.close_path()
         context.stroke()
 
     def clip(self, context, color1, color2, color3):
