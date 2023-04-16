@@ -295,6 +295,20 @@ class My_Shape:
         pts_path.append("Z")
         return pts_path
 
+    def connect_segment(self, pt1, pt2):
+        pts_path = []
+        pts_path.extend(["M", self._matrix[0, pt1], self._matrix[1, pt1]])
+        pts_path.extend(["L", self._matrix[0, pt2], self._matrix[1, pt2]])
+        return pts_path
+
+    def connect_bbox_pts(self):
+        pts_path = []
+        pts_path.extend(["M", self._bbox_pts[0, 0], self._bbox_pts[1, 0]])
+        for pt in range(1, self._bbox_pts.shape[1]):
+            pts_path.extend(["L", self._bbox_pts[0, pt], self._bbox_pts[1, pt]])
+        pts_path.append("Z")
+        return pts_path
+
     # endregion
 
     # region #### Properties
@@ -832,6 +846,22 @@ class My_Circle(My_Shape):
         )
         pts_path.extend(
             ["C", self._control_pts[0, 6], self._control_pts[1, 6], self._control_pts[0, 7], self._control_pts[1, 7], self._matrix[0, 0], self._matrix[1, 0],]
+        )
+        return pts_path
+
+    def connect_segment(self, pt1, pt2):
+        pts_path = []
+        pts_path.extend(["M", self._matrix[0, pt1], self._matrix[1, pt1]])
+        pts_path.extend(
+            [
+                "C",
+                self._control_pts[0, pt1],
+                self._control_pts[1, pt1],
+                self._control_pts[0, pt2],
+                self._control_pts[1, pt2],
+                self._matrix[0, pt2],
+                self._matrix[1, pt2],
+            ]
         )
         return pts_path
 

@@ -1,41 +1,56 @@
-import cairo
-import numpy as np
-import Shapes
+import Shapes_numpy
 
-# Set WIDTH and HEIGHT of context
-WIDTH = 1000
-HEIGHT = 1000
+start_x = 100
+start_y = 100
+positions = {new_list: [] for new_list in ["rect", "par", "trap", "circ", "ellipse", "right_tri", "isos_tri", "equil_tri"]}
+for position in ["center", "bot_left", "mid_left", "top_left", "mid_top", "top_right", "mid_right", "bot_right", "mid_bot"]:
+    rect = Shapes_numpy.My_Rectangle(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y, width=15, height=20)
+    path(rect.connect_pts())
+    path(rect.connect_bbox_pts())
+    positions["rect"].append([start_x, start_y])
+    par = Shapes_numpy.My_Parallelogram(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 100, width=25, angle=15, height=20)
+    path(par.connect_pts())
+    path(par.connect_bbox_pts())
+    positions["par"].append([start_x, start_y + 100])
+    trap = Shapes_numpy.My_Trapezoid(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 200, bot_width=25, angle=15, height=20)
+    path(trap.connect_pts())
+    path(trap.connect_bbox_pts())
+    positions["trap"].append([start_x, start_y + 200])
+    circ = Shapes_numpy.My_Circle(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 300, radius=20)
+    path(circ.connect_pts())
+    path(circ.connect_bbox_pts())
+    positions["circ"].append([start_x, start_y + 300])
+    ellipse = Shapes_numpy.My_Ellipse(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 400, x_radius=20, y_radius=10)
+    path(ellipse.connect_pts())
+    path(ellipse.connect_bbox_pts())
+    positions["ellipse"].append([start_x, start_y + 400])
+    if (position == "mid_top") | (position == "top_right"):
+        pass
+    else:
+        right_tri = Shapes_numpy.My_RightTriangle(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 500, width=25, height=20)
+        path(right_tri.connect_pts())
+        path(right_tri.connect_bbox_pts())
+        positions["right_tri"].append([start_x, start_y + 500])
+    if (position == "top_left") | (position == "top_right"):
+        pass
+    else:
+        isos_tri = Shapes_numpy.My_IsoscelesTriangle(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 600, width=25, height=40)
+        path(isos_tri.connect_pts())
+        path(isos_tri.connect_bbox_pts())
+        positions["isos_tri"].append([start_x, start_y + 600])
+    if (position == "top_left") | (position == "top_right"):
+        pass
+    else:
+        equil_tri = Shapes_numpy.My_EquilateralTriangle(ref_pt=position, ref_pt_x=start_x, ref_pt_y=start_y + 700, width=25)
+        path(equil_tri.connect_pts())
+        path(equil_tri.connect_bbox_pts())
+        positions["equil_tri"].append([start_x, start_y + 700])
+    start_x += 100
 
-# Create the surface on which all objects are drawn
-surface = cairo.ImageSurface(cairo.FORMAT_RGB24, WIDTH, HEIGHT)
-# Create the context which holds the objects and surface
-context = cairo.Context(surface)
+shapes = ["rect", "par", "trap", "circ", "ellipse", "right_tri", "isos_tri", "equil_tri"]
+colors = ["purple", "blue", "green", "cyan", "orange", "yellow", "pink", "blue"]
 
-# Flip the context/surface y-axis (pycairo (0,0) is at top-left by default)
-# (0,0) is now at bot-left
-matrix = cairo.Matrix(yy=-1, y0=surface.get_height())
-context.transform(matrix)
-
-rect1 = Shapes.My_Rectangle(
-    ref_pt="center", ref_pt_x=50, ref_pt_y=950, width=25, height=25
-)
-
-for color1 in np.linspace(0, 1, 11):
-    rect1.draw_fill(context, color1, 1, 1)
-    rect1.translate(0, -50)
-
-rect1.move_xy("center", 50, 950)
-rect1.translate(50, 0)
-
-for color2 in np.linspace(0, 1, 11):
-    rect1.draw_fill(context, 1, color2, 1)
-    rect1.translate(0, -50)
-
-rect1.move_xy("center", 50, 950)
-rect1.translate(100, 0)
-
-for color3 in np.linspace(0, 1, 11):
-    rect1.draw_fill(context, 1, 1, color3)
-    rect1.translate(0, -50)
-
-surface.write_to_png("C:\\Users\\jon21\\Downloads\\test.png")
+for shape in shapes:
+    ref_pts = Shapes_numpy.My_Line_Coord(positions[shape])
+    for pt in range(ref_pts._matrix.shape[1] - 1):
+        path(ref_pts.connect_segment(pt, pt + 1), stroke=colors[pt])
