@@ -421,6 +421,13 @@ class My_Line_Coord(My_Shape):
     def __init__(self, xy_pairs):
         super().__init__(xy_pairs)
 
+    def connect_pts(self):
+        pts_path = []
+        pts_path.extend(["M", self._matrix[0, 0], self._matrix[1, 0]])
+        for pt in range(1, self._matrix.shape[1]):
+            pts_path.extend(["L", self._matrix[0, pt], self._matrix[1, pt]])
+        return pts_path
+
 
 class My_Line_Relative(My_Shape):
     def __init__(self, xy_pairs, angular=False):
