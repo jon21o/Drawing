@@ -15,7 +15,13 @@ def shear_matrix(shx, shy):
 
 
 def rotation_matrix(r):
-    return np.array([[math.cos(math.radians(r)), -math.sin(math.radians(r)), 0], [math.sin(math.radians(r)), math.cos(math.radians(r)), 0], [0, 0, 1],])
+    return np.array(
+        [
+            [math.cos(math.radians(r)), -math.sin(math.radians(r)), 0],
+            [math.sin(math.radians(r)), math.cos(math.radians(r)), 0],
+            [0, 0, 1],
+        ]
+    )
 
 
 bezier_curve_approx = (4 / 3) * math.tan(math.pi / 8)
@@ -34,17 +40,25 @@ class My_Shape:
     # region #### Functions
 
     def calc_bbox_pts(self):
-        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+        if (self.__class__.__name__ == "My_Circle") | (
+            self.__class__.__name__ == "My_Ellipse"
+        ):
             self._bbox_pts = np.ones((3, 8))
 
             center_x = self.centroid_x
             center_y = self.centroid_y
 
             x1 = math.sqrt(
-                self.x_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2
+                self.x_radius ** 2
+                * (math.cos(math.radians(self.rotation))) ** 2
+                + self.y_radius ** 2
+                * (math.sin(math.radians(self.rotation))) ** 2
             )
             y1 = math.sqrt(
-                self.x_radius ** 2 * (math.sin(math.radians(self.rotation))) ** 2 + self.y_radius ** 2 * (math.cos(math.radians(self.rotation))) ** 2
+                self.x_radius ** 2
+                * (math.sin(math.radians(self.rotation))) ** 2
+                + self.y_radius ** 2
+                * (math.cos(math.radians(self.rotation))) ** 2
             )
 
             # pt0 --> bot left
@@ -101,12 +115,17 @@ class My_Shape:
     def translate(self, tx, ty):
         self._matrix = translation_matrix(tx, ty) @ self._matrix
         self._bbox_pts = translation_matrix(tx, ty) @ self._bbox_pts
-        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+        if (self.__class__.__name__ == "My_Circle") | (
+            self.__class__.__name__ == "My_Ellipse"
+        ):
             self._control_pts = translation_matrix(tx, ty) @ self._control_pts
 
     def scale(self, sx, sy):
         self._matrix = (
-            translation_matrix(self.centroid_x, self.centroid_y) @ scale_matrix(sx, sy) @ translation_matrix(-self.centroid_x, -self.centroid_y) @ self._matrix
+            translation_matrix(self.centroid_x, self.centroid_y)
+            @ scale_matrix(sx, sy)
+            @ translation_matrix(-self.centroid_x, -self.centroid_y)
+            @ self._matrix
         )
         self._bbox_pts = (
             translation_matrix(self.centroid_x, self.centroid_y,)
@@ -114,7 +133,9 @@ class My_Shape:
             @ translation_matrix(-self.centroid_x, -self.centroid_y,)
             @ self._bbox_pts,
         )
-        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+        if (self.__class__.__name__ == "My_Circle") | (
+            self.__class__.__name__ == "My_Ellipse"
+        ):
             self._control_pts = (
                 translation_matrix(self.centroid_x, self.centroid_y,)
                 @ scale_matrix(sx, sy)
@@ -136,7 +157,9 @@ class My_Shape:
             @ self._bbox_pts,
         )
 
-        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+        if (self.__class__.__name__ == "My_Circle") | (
+            self.__class__.__name__ == "My_Ellipse"
+        ):
             self._control_pts = (
                 translation_matrix(self.centroid_x, self.centroid_y,)
                 @ shear_matrix(shx, shy)
@@ -147,10 +170,15 @@ class My_Shape:
     def rotate(self, r):
         self._rotation += r
         self._matrix = (
-            translation_matrix(self.centroid_x, self.centroid_y,) @ rotation_matrix(r) @ translation_matrix(-self.centroid_x, -self.centroid_y,) @ self._matrix,
+            translation_matrix(self.centroid_x, self.centroid_y,)
+            @ rotation_matrix(r)
+            @ translation_matrix(-self.centroid_x, -self.centroid_y,)
+            @ self._matrix,
         )
         self.calc_bbox_pts()
-        if (self.__class__.__name__ == "My_Circle") | (self.__class__.__name__ == "My_Ellipse"):
+        if (self.__class__.__name__ == "My_Circle") | (
+            self.__class__.__name__ == "My_Ellipse"
+        ):
             self._control_pts = (
                 translation_matrix(self.centroid_x, self.centroid_y,)
                 @ rotation_matrix(r)
@@ -327,31 +355,47 @@ class My_Shape:
     @property
     def pts_x(self):
         "pts start at 0"
-        return {"pt{}".format(pt): self._matrix[0, pt] for pt in range(self._matrix.shape[1])}
+        return {
+            "pt{}".format(pt): self._matrix[0, pt]
+            for pt in range(self._matrix.shape[1])
+        }
 
     @property
     def pts_y(self):
         "pts start at 0"
-        return {"pt{}".format(pt): self._matrix[1, pt] for pt in range(self._matrix.shape[1])}
+        return {
+            "pt{}".format(pt): self._matrix[1, pt]
+            for pt in range(self._matrix.shape[1])
+        }
 
     @property
     def mid_pts_x(self):
         # create pts 0 through end
         mid_pts_dict = {
-            "mid_pt_{}_{}".format(pt + 1, pt): ((self._matrix[0, pt + 1] - self._matrix[0, pt]) / 2) + self._matrix[0, pt]
+            "mid_pt_{}_{}".format(pt + 1, pt): (
+                (self._matrix[0, pt + 1] - self._matrix[0, pt]) / 2
+            )
+            + self._matrix[0, pt]
             for pt in range(self._matrix.shape[1])
         }
         # have to handle last mid point separately because connects first and last point
-        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.shape[1], 0)] = ((self._matrix[0, 0] - self._matrix[0, -1]) / 2) + self._matrix[0, -1]
+        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.shape[1], 0)] = (
+            (self._matrix[0, 0] - self._matrix[0, -1]) / 2
+        ) + self._matrix[0, -1]
         return mid_pts_dict
 
     @property
     def mid_pts_y(self):
         mid_pts_dict = {
-            "mid_pt_{}_{}".format(pt + 1, pt): ((self._matrix[1, pt + 1] - self._matrix[1, pt]) / 2) + self._matrix[1, pt]
+            "mid_pt_{}_{}".format(pt + 1, pt): (
+                (self._matrix[1, pt + 1] - self._matrix[1, pt]) / 2
+            )
+            + self._matrix[1, pt]
             for pt in range(self._matrix.shape[1])
         }
-        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.shape[1], 0)] = ((self._matrix[1, 0] - self._matrix[1, -1]) / 2) + self._matrix[1, -1]
+        mid_pts_dict["mid_pt_{}_{}".format(self._matrix.shape[1], 0)] = (
+            (self._matrix[1, 0] - self._matrix[1, -1]) / 2
+        ) + self._matrix[1, -1]
         return mid_pts_dict
 
     @property
@@ -359,15 +403,15 @@ class My_Shape:
         return self._bbox_pts[0, 0]
 
     @property
+    def bbox_right_x(self):
+        return self._bbox_pts[0, 4]
+
+    @property
     def bbox_bot_y(self):
         return self._bbox_pts[1, 0]
 
     @property
     def bbox_top_y(self):
-        return self._bbox_pts[0, 4]
-
-    @property
-    def bbox_right_x(self):
         return self._bbox_pts[1, 4]
 
     # endregion
@@ -431,6 +475,8 @@ class My_Rectangle(My_Shape):
         # pt4 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 4))
+        self._width = width
+        self._height = height
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         self._matrix[0, 0] = ref_pt_x
@@ -463,10 +509,25 @@ class My_Rectangle(My_Shape):
             self.translate(-width / 2, 0)
         # endregion
 
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
 
 class My_Parallelogram(My_Shape):
     def __init__(
-        self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None, offset=None,
+        self,
+        ref_pt,
+        ref_pt_x,
+        ref_pt_y,
+        width=None,
+        height=None,
+        angle=None,
+        offset=None,
     ):
         # pt1 --> bot left
         # pt2 --> top left
@@ -474,6 +535,10 @@ class My_Parallelogram(My_Shape):
         # pt4 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 4))
+        self._width = width
+        self._height = height
+        self._angle = angle
+        self._offset = offset
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         if (width != None) & (height != None) & (offset != None):
@@ -488,9 +553,13 @@ class My_Parallelogram(My_Shape):
         elif (width != None) & (height != None) & (angle != None):
             self._matrix[0, 0] = ref_pt_x
             self._matrix[1, 0] = ref_pt_y
-            self._matrix[0, 1] = ref_pt_x + (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 1] = ref_pt_x + (
+                math.tan(math.radians(angle)) * height
+            )
             self._matrix[1, 1] = ref_pt_y + height
-            self._matrix[0, 2] = ref_pt_x + width + (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 2] = (
+                ref_pt_x + width + (math.tan(math.radians(angle)) * height)
+            )
             self._matrix[1, 2] = ref_pt_y + height
             self._matrix[0, 3] = ref_pt_x + width
             self._matrix[1, 3] = ref_pt_y
@@ -500,27 +569,37 @@ class My_Parallelogram(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self._matrix[0, 0] - self.centroid_x, self._matrix[1, 0] - self.centroid_y,
+                self._matrix[0, 0] - self.centroid_x,
+                self._matrix[1, 0] - self.centroid_y,
             )
         elif ref_pt == "mid_left":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 1]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "top_left":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 1], self._matrix[1, 0] - self._matrix[1, 1],
+                self._matrix[0, 0] - self._matrix[0, 1],
+                self._matrix[1, 0] - self._matrix[1, 1],
             )
         elif ref_pt == "mid_top":
             self.translate(
-                self._matrix[0, 3] - self._matrix[0, 2] + (self._matrix[0, 0] - self._matrix[0, 3]) / 2, self._matrix[1, 0] - self._matrix[1, 2],
+                self._matrix[0, 3]
+                - self._matrix[0, 2]
+                + (self._matrix[0, 0] - self._matrix[0, 3]) / 2,
+                self._matrix[1, 0] - self._matrix[1, 2],
             )
         elif ref_pt == "top_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 2], self._matrix[1, 0] - self._matrix[1, 2],
+                self._matrix[0, 0] - self._matrix[0, 2],
+                self._matrix[1, 0] - self._matrix[1, 2],
             )
         elif ref_pt == "mid_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 3] + (self._matrix[0, 3] - self._matrix[0, 2]) / 2, (self._matrix[1, 3] - self._matrix[1, 2]) / 2,
+                self._matrix[0, 0]
+                - self._matrix[0, 3]
+                + (self._matrix[0, 3] - self._matrix[0, 2]) / 2,
+                (self._matrix[1, 3] - self._matrix[1, 2]) / 2,
             )
         elif ref_pt == "bot_right":
             self.translate(
@@ -532,14 +611,35 @@ class My_Parallelogram(My_Shape):
             )
         # endregion
 
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def angle(self):
+        return self._angle
+
+    @property
+    def offset(self):
+        return self._offset
+
 
 class My_RightTriangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None):
+    def __init__(
+        self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None
+    ):
         # pt1 --> bot left
         # pt2 --> top left
         # pt3 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 3))
+        self._width = width
+        self._height = height
+        self._angle = angle
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         # 90 deg is at bot_left
@@ -554,7 +654,9 @@ class My_RightTriangle(My_Shape):
             self._matrix[0, 0] = ref_pt_x
             self._matrix[1, 0] = ref_pt_y
             self._matrix[0, 1] = ref_pt_x
-            self._matrix[1, 1] = ref_pt_y + (math.tan(math.radians(angle)) * width)
+            self._matrix[1, 1] = ref_pt_y + (
+                math.tan(math.radians(angle)) * width
+            )
             self._matrix[0, 2] = ref_pt_x + width
             self._matrix[1, 2] = ref_pt_y
 
@@ -563,19 +665,23 @@ class My_RightTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                -(self.centroid_x - self._matrix[0, 0]), -(self.centroid_y - self._matrix[1, 0]),
+                -(self.centroid_x - self._matrix[0, 0]),
+                -(self.centroid_y - self._matrix[1, 0]),
             )
         elif ref_pt == "mid_left":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 1]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "top_left":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 1], self._matrix[1, 0] - self._matrix[1, 1],
+                self._matrix[0, 0] - self._matrix[0, 1],
+                self._matrix[1, 0] - self._matrix[1, 1],
             )
         elif ref_pt == "mid_right":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 2]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 2]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "bot_right":
             self.translate(
@@ -587,14 +693,31 @@ class My_RightTriangle(My_Shape):
             )
         # endregion
 
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def angle(self):
+        return self._angle
+
 
 class My_IsoscelesTriangle(My_Shape):
-    def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None):
+    def __init__(
+        self, ref_pt, ref_pt_x, ref_pt_y, width=None, height=None, angle=None
+    ):
         # pt1 --> bot left
         # pt2 --> mid top
         # pt3 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 3))
+        self._width = width
+        self._height = height
+        self._angle = angle
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         if (width != None) & (height != None):
@@ -608,7 +731,9 @@ class My_IsoscelesTriangle(My_Shape):
             self._matrix[0, 0] = ref_pt_x
             self._matrix[1, 0] = ref_pt_y
             self._matrix[0, 1] = ref_pt_x + (width / 2)
-            self._matrix[1, 1] = ref_pt_y + (math.tan(math.radians(angle)) * (width / 2))
+            self._matrix[1, 1] = ref_pt_y + (
+                math.tan(math.radians(angle)) * (width / 2)
+            )
             self._matrix[0, 2] = ref_pt_x + width
             self._matrix[1, 2] = ref_pt_y
 
@@ -617,19 +742,25 @@ class My_IsoscelesTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self._matrix[0, 0] - self.centroid_x, self._matrix[1, 0] - self.centroid_y,
+                self._matrix[0, 0] - self.centroid_x,
+                self._matrix[1, 0] - self.centroid_y,
             )
         elif ref_pt == "mid_left":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 1]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "mid_top":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]), (self._matrix[1, 0] - self._matrix[1, 1]),
+                (self._matrix[0, 0] - self._matrix[0, 1]),
+                (self._matrix[1, 0] - self._matrix[1, 1]),
             )
         elif ref_pt == "mid_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 1] + (self._matrix[0, 1] - self._matrix[0, 2]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                self._matrix[0, 0]
+                - self._matrix[0, 1]
+                + (self._matrix[0, 1] - self._matrix[0, 2]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "bot_right":
             self.translate(
@@ -641,6 +772,18 @@ class My_IsoscelesTriangle(My_Shape):
             )
         # endregion
 
+    @property
+    def width(self):
+        return self._width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def angle(self):
+        return self._angle
+
 
 class My_EquilateralTriangle(My_Shape):
     def __init__(self, ref_pt, ref_pt_x, ref_pt_y, width=None):
@@ -649,12 +792,15 @@ class My_EquilateralTriangle(My_Shape):
         # pt3 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 3))
+        self._width = width
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         self._matrix[0, 0] = ref_pt_x
         self._matrix[1, 0] = ref_pt_y
         self._matrix[0, 1] = ref_pt_x + (width / 2)
-        self._matrix[1, 1] = ref_pt_y + (math.tan(math.radians(60)) * (width / 2))
+        self._matrix[1, 1] = ref_pt_y + (
+            math.tan(math.radians(60)) * (width / 2)
+        )
         self._matrix[0, 2] = ref_pt_x + width
         self._matrix[1, 2] = ref_pt_y
 
@@ -663,19 +809,25 @@ class My_EquilateralTriangle(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self._matrix[0, 0] - self.centroid_x, self._matrix[1, 0] - self.centroid_y,
+                self._matrix[0, 0] - self.centroid_x,
+                self._matrix[1, 0] - self.centroid_y,
             )
         elif ref_pt == "mid_left":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 1]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "mid_top":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]), (self._matrix[1, 0] - self._matrix[1, 1]),
+                (self._matrix[0, 0] - self._matrix[0, 1]),
+                (self._matrix[1, 0] - self._matrix[1, 1]),
             )
         elif ref_pt == "mid_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 1] + (self._matrix[0, 1] - self._matrix[0, 2]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                self._matrix[0, 0]
+                - self._matrix[0, 1]
+                + (self._matrix[0, 1] - self._matrix[0, 2]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "bot_right":
             self.translate(
@@ -687,10 +839,21 @@ class My_EquilateralTriangle(My_Shape):
             )
         # endregion
 
+    @property
+    def width(self):
+        return self._width
+
 
 class My_Trapezoid(My_Shape):
     def __init__(
-        self, ref_pt, ref_pt_x, ref_pt_y, bot_width=None, top_width=None, height=None, angle=None,
+        self,
+        ref_pt,
+        ref_pt_x,
+        ref_pt_y,
+        bot_width=None,
+        top_width=None,
+        height=None,
+        angle=None,
     ):
         # pt1 --> bot left
         # pt2 --> top left
@@ -698,6 +861,10 @@ class My_Trapezoid(My_Shape):
         # pt4 --> bot right
         self._rotation = 0
         self._matrix = np.ones((3, 4))
+        self._bot_width = bot_width
+        self._top_width = top_width
+        self._height = height
+        self._angle = angle
 
         # start with ref_pt = "bot_left" and translate to different ref_pts below
         if (bot_width != None) & (top_width != None) & (height != None):
@@ -705,26 +872,38 @@ class My_Trapezoid(My_Shape):
             self._matrix[1, 0] = ref_pt_y
             self._matrix[0, 1] = ref_pt_x + (bot_width - top_width) / 2
             self._matrix[1, 1] = ref_pt_y + height
-            self._matrix[0, 2] = ref_pt_x + top_width + (bot_width - top_width) / 2
+            self._matrix[0, 2] = (
+                ref_pt_x + top_width + (bot_width - top_width) / 2
+            )
             self._matrix[1, 2] = ref_pt_y + height
             self._matrix[0, 3] = ref_pt_x + bot_width
             self._matrix[1, 3] = ref_pt_y
         elif (bot_width != None) & (angle != None) & (height != None):
             self._matrix[0, 0] = ref_pt_x
             self._matrix[1, 0] = ref_pt_y
-            self._matrix[0, 1] = ref_pt_x + (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 1] = ref_pt_x + (
+                math.tan(math.radians(angle)) * height
+            )
             self._matrix[1, 1] = ref_pt_y + height
-            self._matrix[0, 2] = ref_pt_x + bot_width - (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 2] = (
+                ref_pt_x + bot_width - (math.tan(math.radians(angle)) * height)
+            )
             self._matrix[1, 2] = ref_pt_y + height
             self._matrix[0, 3] = ref_pt_x + bot_width
             self._matrix[1, 3] = ref_pt_y
         elif (top_width != None) & (angle != None) & (height != None):
-            bot_width = top_width - 2 * math.tan(math.radians(180 - angle)) * height
+            bot_width = (
+                top_width - 2 * math.tan(math.radians(180 - angle)) * height
+            )
             self._matrix[0, 0] = ref_pt_x
             self._matrix[1, 0] = ref_pt_y
-            self._matrix[0, 1] = ref_pt_x + (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 1] = ref_pt_x + (
+                math.tan(math.radians(angle)) * height
+            )
             self._matrix[1, 1] = ref_pt_y + height
-            self._matrix[0, 2] = ref_pt_x + bot_width - (math.tan(math.radians(angle)) * height)
+            self._matrix[0, 2] = (
+                ref_pt_x + bot_width - (math.tan(math.radians(angle)) * height)
+            )
             self._matrix[1, 2] = ref_pt_y + height
             self._matrix[0, 3] = ref_pt_x + bot_width
             self._matrix[1, 3] = ref_pt_y
@@ -734,27 +913,35 @@ class My_Trapezoid(My_Shape):
         # region #### reference site definitions
         if ref_pt == "center":
             self.translate(
-                self._matrix[0, 0] - self.centroid_x, self._matrix[1, 0] - self.centroid_y,
+                self._matrix[0, 0] - self.centroid_x,
+                self._matrix[1, 0] - self.centroid_y,
             )
         elif ref_pt == "mid_left":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 1]) / 2, (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
+                (self._matrix[0, 0] - self._matrix[0, 1]) / 2,
+                (self._matrix[1, 0] - self._matrix[1, 1]) / 2,
             )
         elif ref_pt == "top_left":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 1], self._matrix[1, 0] - self._matrix[1, 1],
+                self._matrix[0, 0] - self._matrix[0, 1],
+                self._matrix[1, 0] - self._matrix[1, 1],
             )
         elif ref_pt == "mid_top":
             self.translate(
-                (self._matrix[0, 0] - self._matrix[0, 3]) / 2, self._matrix[1, 0] - self._matrix[1, 2],
+                (self._matrix[0, 0] - self._matrix[0, 3]) / 2,
+                self._matrix[1, 0] - self._matrix[1, 2],
             )
         elif ref_pt == "top_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 2], self._matrix[1, 0] - self._matrix[1, 2],
+                self._matrix[0, 0] - self._matrix[0, 2],
+                self._matrix[1, 0] - self._matrix[1, 2],
             )
         elif ref_pt == "mid_right":
             self.translate(
-                self._matrix[0, 0] - self._matrix[0, 3] + (self._matrix[0, 3] - self._matrix[0, 2]) / 2, (self._matrix[1, 3] - self._matrix[1, 2]) / 2,
+                self._matrix[0, 0]
+                - self._matrix[0, 3]
+                + (self._matrix[0, 3] - self._matrix[0, 2]) / 2,
+                (self._matrix[1, 3] - self._matrix[1, 2]) / 2,
             )
         elif ref_pt == "bot_right":
             self.translate(
@@ -765,6 +952,22 @@ class My_Trapezoid(My_Shape):
                 (self._matrix[0, 0] - self._matrix[0, 3]) / 2, 0,
             )
         # endregion
+
+    @property
+    def bot_width(self):
+        return self._bot_width
+
+    @property
+    def top_width(self):
+        return self._top_width
+
+    @property
+    def height(self):
+        return self._height
+
+    @property
+    def angle(self):
+        return self._angle
 
 
 class My_Circle(My_Shape):
@@ -777,6 +980,9 @@ class My_Circle(My_Shape):
         # pt4 --> bot
         self._rotation = 0
         self._matrix = np.ones((3, 4))
+        self._radius = radius
+        self._x_radius = radius
+        self._y_radius = radius
 
         # start with ref_pt = "mid_left" and translate to different ref_pts below
         self._matrix[0, 0] = ref_pt_x
@@ -814,21 +1020,37 @@ class My_Circle(My_Shape):
         self._control_pts = np.ones((3, 8))
 
         self._control_pts[0, 0] = self._matrix[0, 0]
-        self._control_pts[1, 0] = self._matrix[1, 0] + (bezier_curve_approx * self.y_radius)
-        self._control_pts[0, 1] = self._matrix[0, 1] - (bezier_curve_approx * self.x_radius)
+        self._control_pts[1, 0] = self._matrix[1, 0] + (
+            bezier_curve_approx * self.y_radius
+        )
+        self._control_pts[0, 1] = self._matrix[0, 1] - (
+            bezier_curve_approx * self.x_radius
+        )
         self._control_pts[1, 1] = self._matrix[1, 1]
-        self._control_pts[0, 2] = (bezier_curve_approx * self.x_radius) + self._matrix[0, 1]
+        self._control_pts[0, 2] = (
+            bezier_curve_approx * self.x_radius
+        ) + self._matrix[0, 1]
         self._control_pts[1, 2] = self._matrix[1, 1]
         self._control_pts[0, 3] = self._matrix[0, 2]
-        self._control_pts[1, 3] = self._matrix[1, 2] + (bezier_curve_approx * self.y_radius)
+        self._control_pts[1, 3] = self._matrix[1, 2] + (
+            bezier_curve_approx * self.y_radius
+        )
         self._control_pts[0, 4] = self._matrix[0, 2]
-        self._control_pts[1, 4] = self._matrix[1, 2] - (bezier_curve_approx * self.y_radius)
-        self._control_pts[0, 5] = self._matrix[0, 3] + (bezier_curve_approx * self.x_radius)
+        self._control_pts[1, 4] = self._matrix[1, 2] - (
+            bezier_curve_approx * self.y_radius
+        )
+        self._control_pts[0, 5] = self._matrix[0, 3] + (
+            bezier_curve_approx * self.x_radius
+        )
         self._control_pts[1, 5] = self._matrix[1, 3]
-        self._control_pts[0, 6] = self._matrix[0, 3] - (bezier_curve_approx * self.x_radius)
+        self._control_pts[0, 6] = self._matrix[0, 3] - (
+            bezier_curve_approx * self.x_radius
+        )
         self._control_pts[1, 6] = self._matrix[1, 3]
         self._control_pts[0, 7] = self._matrix[0, 0]
-        self._control_pts[1, 7] = self._matrix[1, 0] - (bezier_curve_approx * self.y_radius)
+        self._control_pts[1, 7] = self._matrix[1, 0] - (
+            bezier_curve_approx * self.y_radius
+        )
 
     def connect_pts(self):
         pts_path = []
@@ -836,16 +1058,48 @@ class My_Circle(My_Shape):
             ["M", self._matrix[0, 0], self._matrix[1, 0],]
         )
         pts_path.extend(
-            ["C", self._control_pts[0, 0], self._control_pts[1, 0], self._control_pts[0, 1], self._control_pts[1, 1], self._matrix[0, 1], self._matrix[1, 1],]
+            [
+                "C",
+                self._control_pts[0, 0],
+                self._control_pts[1, 0],
+                self._control_pts[0, 1],
+                self._control_pts[1, 1],
+                self._matrix[0, 1],
+                self._matrix[1, 1],
+            ]
         )
         pts_path.extend(
-            ["C", self._control_pts[0, 2], self._control_pts[1, 2], self._control_pts[0, 3], self._control_pts[1, 3], self._matrix[0, 2], self._matrix[1, 2],]
+            [
+                "C",
+                self._control_pts[0, 2],
+                self._control_pts[1, 2],
+                self._control_pts[0, 3],
+                self._control_pts[1, 3],
+                self._matrix[0, 2],
+                self._matrix[1, 2],
+            ]
         )
         pts_path.extend(
-            ["C", self._control_pts[0, 4], self._control_pts[1, 4], self._control_pts[0, 5], self._control_pts[1, 5], self._matrix[0, 3], self._matrix[1, 3],]
+            [
+                "C",
+                self._control_pts[0, 4],
+                self._control_pts[1, 4],
+                self._control_pts[0, 5],
+                self._control_pts[1, 5],
+                self._matrix[0, 3],
+                self._matrix[1, 3],
+            ]
         )
         pts_path.extend(
-            ["C", self._control_pts[0, 6], self._control_pts[1, 6], self._control_pts[0, 7], self._control_pts[1, 7], self._matrix[0, 0], self._matrix[1, 0],]
+            [
+                "C",
+                self._control_pts[0, 6],
+                self._control_pts[1, 6],
+                self._control_pts[0, 7],
+                self._control_pts[1, 7],
+                self._matrix[0, 0],
+                self._matrix[1, 0],
+            ]
         )
         return pts_path
 
@@ -867,15 +1121,15 @@ class My_Circle(My_Shape):
 
     @property
     def radius(self):
-        return np.sqrt((self.centroid_x - self._matrix[0, 0]) ** 2 + (self.centroid_y - self._matrix[1, 0]) ** 2)
+        return self._radius
 
     @property
     def x_radius(self):
-        return np.sqrt((self.centroid_x - self._matrix[0, 0]) ** 2 + (self.centroid_y - self._matrix[1, 0]) ** 2)
+        return self._x_radius
 
     @property
     def y_radius(self):
-        return np.sqrt((self.centroid_x - self._matrix[0, 1]) ** 2 + (self.centroid_y - self._matrix[1, 1]) ** 2)
+        return self._y_radius
 
 
 class My_Ellipse(My_Circle):
@@ -888,6 +1142,8 @@ class My_Ellipse(My_Circle):
         # pt4 --> bot
         self._rotation = 0
         self._matrix = np.ones((3, 4))
+        self._x_radius = x_radius
+        self._y_radius = y_radius
 
         # start with ref_pt = "mid_left" and translate to different ref_pts below
         self._matrix[0, 0] = ref_pt_x
@@ -923,5 +1179,7 @@ class My_Ellipse(My_Circle):
 
     @property
     def radius(self):
-        print("An ellipse has a major and minor axis. Use x_radius and y_radius.")
+        print(
+            "An ellipse has a major and minor axis. Use x_radius and y_radius."
+        )
 
